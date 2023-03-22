@@ -2,10 +2,36 @@ package fastcampus.part1.fc_chapter7
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.google.android.material.chip.Chip
+import fastcampus.part1.fc_chapter7.databinding.ActivityAddBinding
 
 class AddActivity : AppCompatActivity() {
+    private lateinit var binding : ActivityAddBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add)
+        binding = ActivityAddBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+
+        initViews()
+    }
+
+    private fun initViews() {
+        val types = listOf("명사", "동사", "대명사", "형용사", "부사", "감탄사", "전치사", "접속사")
+        binding.typeChipGroup.apply {
+            // 리스트인 types의 값들을 하나씩 꺼내서 addView로 칩 생성 (칩 == createChip(text))
+            types.forEach { text ->
+                addView(createChip(text))
+            }
+        }
+    }
+
+    // Chip 생성
+    private fun createChip(text: String) : Chip {
+        return Chip(this).apply {
+            setText(text)
+            isCheckable = true
+            isClickable = true
+        }
     }
 }
