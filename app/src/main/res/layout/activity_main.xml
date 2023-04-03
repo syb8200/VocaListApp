@@ -22,10 +22,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="뜻 입니다."
         app:layout_constraintEnd_toStartOf="@+id/editImageView"
         app:layout_constraintStart_toStartOf="@id/textTextView"
-        app:layout_constraintTop_toBottomOf="@id/textTextView" />
+        app:layout_constraintTop_toBottomOf="@id/textTextView"
+        tools:text="뜻 입니다." />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrier"
