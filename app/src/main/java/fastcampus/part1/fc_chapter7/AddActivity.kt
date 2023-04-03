@@ -1,5 +1,6 @@
 package fastcampus.part1.fc_chapter7
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -45,11 +46,15 @@ class AddActivity : AppCompatActivity() {
         val type = findViewById<Chip>(binding.typeChipGroup.checkedChipId).text.toString()
         val word = Word(text, mean, type)
 
+        // 데이터베이스 작업은 UI 스레드에서 진행X (작업시간이 오래 걸려서 ANR 발생 가능성 있음)
         Thread {
+            // AppDatabase에서 getInstance로 접근 -> interface인 WordDao에 접근 -> insert
             AppDatabase.getInstance(this)?.wordDao()?.insert(word)
             runOnUiThread {
                 Toast.makeText(this, "저장을 완료했습니다.", Toast.LENGTH_SHORT).show()
             }
+            val intent = Intent().putExtra("isUpdated", true)
+            setResult(RESULT_OK, intent)
             finish()
         }.start()
     }
