@@ -4,10 +4,14 @@ import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Toast
 import androidx.core.view.children
+import androidx.core.widget.addTextChangedListener
 import com.google.android.material.chip.Chip
 import fastcampus.part1.fc_chapter7.databinding.ActivityAddBinding
+import org.w3c.dom.Text
 
 class AddActivity : AppCompatActivity() {
     private lateinit var binding : ActivityAddBinding
@@ -38,6 +42,17 @@ class AddActivity : AppCompatActivity() {
                 addView(createChip(text))
             }
         }
+
+        binding.textInputEditText.addTextChangedListener {
+            it?.let { text ->
+                binding.textTextInputLayout.error = when(text.length) {
+                    0 -> "값을 입력해주세요."
+                    1 -> "2자 이상을 입력해주세요."
+                    else -> null
+                }
+            }
+        }
+
 
         // getParcelableExtra가 deprecated가 되어서 코드를 추가해보았음
         originWord = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
