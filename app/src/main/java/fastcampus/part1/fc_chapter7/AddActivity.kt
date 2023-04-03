@@ -1,14 +1,18 @@
 package fastcampus.part1.fc_chapter7
 
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.core.view.children
 import com.google.android.material.chip.Chip
 import fastcampus.part1.fc_chapter7.databinding.ActivityAddBinding
 
 class AddActivity : AppCompatActivity() {
     private lateinit var binding : ActivityAddBinding
+    private var originWord : Word? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddBinding.inflate(layoutInflater)
@@ -17,7 +21,12 @@ class AddActivity : AppCompatActivity() {
 
         initViews()
         binding.addButton.setOnClickListener {
-            add()
+            if (originWord == null) {
+                add()
+            } else {
+                edit()
+            }
+
         }
     }
 
@@ -28,6 +37,21 @@ class AddActivity : AppCompatActivity() {
             types.forEach { text ->
                 addView(createChip(text))
             }
+        }
+
+        // getParcelableExtra가 deprecated가 되어서 코드를 추가해보았음
+        originWord = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra("originWord", Word::class.java)
+        } else {
+            intent.getParcelableExtra("originWord")
+        }
+
+        originWord?.let { word ->
+            // editText에 text를 세팅할 때에는 setText() 이용
+            binding.textInputEditText.setText(word.text)
+            binding.meanInputEditText.setText(word.mean)
+            val selectedChip = binding.typeChipGroup.children.firstOrNull { (it as Chip).text == word.type } as? Chip
+            selectedChip?.isChecked = true
         }
     }
 
@@ -56,6 +80,25 @@ class AddActivity : AppCompatActivity() {
             val intent = Intent().putExtra("isUpdated", true)
             setResult(RESULT_OK, intent)
             finish()
+        }.start()
+    }
+
+    private fun edit() {
+        val text = binding.textInputEditText.text.toString()
+        val mean = binding.meanInputEditText.text.toString()
+        val type = findViewById<Chip>(binding.typeChipGroup.checkedChipId).text.toString()
+        val editWord = originWord?.copy(text = text, mean = mean, type = type)
+
+        Thread {
+            editWord?.let { word ->
+                AppDatabase.getInstance(this)?.wordDao()?.update(word)
+                val intent = Intent().putExtra("editWord", editWord)
+                setResult(RESULT_OK, intent)
+                runOnUiThread {
+                    Toast.makeText(this, "수정을 완료하였습니다.", Toast.LENGTH_SHORT).show()
+                }
+                finish()
+            }
         }.start()
     }
 }

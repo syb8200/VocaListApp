@@ -1,10 +1,12 @@
 package fastcampus.part1.fc_chapter7
 
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import fastcampus.part1.fc_chapter7.databinding.ActivityMainBinding
@@ -20,7 +22,22 @@ class MainActivity : AppCompatActivity(), WordAdapter.ItemClickListener {
     ) { result ->
         val isUpdated = result.data?.getBooleanExtra("isUpdated", false) ?: false
         if(result.resultCode == RESULT_OK && isUpdated) {
-            updateAddWordResult()
+            updateAddWord()
+        }
+    }
+
+    private val updateEditWordResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        // getParcelableExtra가 deprecated가 되어서 코드를 추가해보았음
+        val editWord = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            result.data?.getParcelableExtra("editWord", Word::class.java) ?: null
+        } else {
+            result.data?.getParcelableExtra<Word>("editWord") ?: null
+        }
+
+        if(result.resultCode == RESULT_OK && editWord != null) {
+            updateEditWord(editWord)
         }
     }
 
@@ -40,6 +57,10 @@ class MainActivity : AppCompatActivity(), WordAdapter.ItemClickListener {
 
         binding.deleteImageView.setOnClickListener {
             delete()
+        }
+
+        binding.editImageView.setOnClickListener {
+            edit()
         }
     }
 
@@ -66,15 +87,27 @@ class MainActivity : AppCompatActivity(), WordAdapter.ItemClickListener {
         }.start()
     }
 
-    private fun updateAddWordResult() {
+    private fun updateAddWord() {
         Thread {
             AppDatabase.getInstance(this)?.wordDao()?.getLatestWord()?.let { word ->
                 wordAdapter.list.add(0, word)
                 runOnUiThread{
+                    selectedWord = word
                     wordAdapter.notifyDataSetChanged()
+                    binding.textTextView.text = word.text
+                    binding.meanTextView.text = word.mean
                 }
             }
         }.start()
+    }
+
+    private fun updateEditWord(word: Word) {
+        val index = wordAdapter.list.indexOfFirst { it.id == word.id }
+        wordAdapter.list[index] = word
+        runOnUiThread {
+            wordAdapter.notifyItemChanged(index)
+        }
+
     }
 
     private fun delete() {
@@ -92,6 +125,14 @@ class MainActivity : AppCompatActivity(), WordAdapter.ItemClickListener {
                 }
             }
         }.start()
+    }
+
+    private fun edit() {
+        if (selectedWord == null) return
+
+        // AddActivity로 이동해서 수정
+        val intent = Intent(this, AddActivity::class.java).putExtra("originWord", selectedWord)
+        updateEditWordResult.launch(intent)
     }
 
     override fun onClick(word: Word) {

@@ -1,8 +1,11 @@
 package fastcampus.part1.fc_chapter7
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 // data holding 역할 (상속 불가능, 반드시 하나 이상의 property 갖음)
 @Entity(tableName = "word")
 data class Word(
@@ -12,4 +15,4 @@ data class Word(
 
     // 자동으로 id 값이 자동으로 만들어진다.
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-)
+) : Parcelable
